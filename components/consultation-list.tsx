@@ -82,18 +82,20 @@ function ConsultationItem({ consultation }: { consultation: Consultation }) {
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
+        <div className="min-w-0">
           <p className="font-medium">
             <LocalDateTime value={consultation.scheduledAt} />
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="break-words text-sm text-muted-foreground">
             {consultation.firstName} {consultation.lastName}
           </p>
         </div>
         <StatusBadge consultation={consultation} />
       </div>
 
-      <p className="mt-3 whitespace-pre-wrap text-sm">{consultation.reason}</p>
+      <p className="mt-3 whitespace-pre-wrap break-words text-sm">
+        {consultation.reason}
+      </p>
 
       {!isCancelled && (
         <div className="mt-4 flex flex-wrap items-center gap-4">

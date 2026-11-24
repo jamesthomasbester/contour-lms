@@ -108,23 +108,29 @@ function ConsultationTable({
 }) {
   return (
     <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-left text-sm">
+      {/* Fixed column widths so long names or reasons can't stretch the
+          table. Both are shortened here; hover shows the full text. */}
+      <table className="w-full min-w-[900px] table-fixed text-left text-sm">
         <thead className="border-b bg-muted/50">
           <tr>
-            <th className="p-3 font-medium">Student</th>
+            <th className="w-40 p-3 font-medium">Student</th>
             <th className="p-3 font-medium">Reason</th>
-            <th className="p-3 font-medium">Scheduled for</th>
-            <th className="p-3 font-medium">Status</th>
-            <th className="p-3 font-medium">Booked</th>
+            <th className="w-44 p-3 font-medium">Scheduled for</th>
+            <th className="w-28 p-3 font-medium">Status</th>
+            <th className="w-44 p-3 font-medium">Booked</th>
           </tr>
         </thead>
         <tbody>
           {consultations.map((c) => (
-            <tr key={c.id} className="border-b last:border-0">
-              <td className="p-3 whitespace-nowrap">
+            <tr key={c.id} className="border-b align-top last:border-0">
+              <td className="truncate p-3" title={`${c.firstName} ${c.lastName}`}>
                 {c.firstName} {c.lastName}
               </td>
-              <td className="max-w-xs p-3">{c.reason}</td>
+              <td className="p-3">
+                <p className="line-clamp-2 break-words" title={c.reason}>
+                  {c.reason}
+                </p>
+              </td>
               <td className="p-3 whitespace-nowrap">
                 <LocalDateTime value={c.scheduledAt} />
               </td>
