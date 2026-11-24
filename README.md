@@ -1,110 +1,241 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# Contour LMS
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+A small learning management system for booking consultations. Students can
+book, reschedule, cancel and complete their own consultations. Admins get a
+read-only view of every consultation in the system.
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+Built with Next.js 16 (App Router), TypeScript and Supabase (Postgres, Auth,
+`supabase-js` and `@supabase/ssr`), starting from the official
+`with-supabase` example.
 
 ## Features
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+- Email and password sign up, log in and log out
+- Student dashboard listing their own consultations
+- Mark a consultation complete or incomplete
+- Book a consultation (first name, last name, reason, date and time)
+- Reschedule or cancel your own consultations
+- Admin page at `/admin` listing all consultations (read-only)
 
-## Demo
+## Running it locally
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+You need Node.js 20 or newer and Docker (the Supabase CLI runs the database
+and auth server in containers). The Supabase CLI itself is a dev dependency,
+so there is nothing else to install.
 
-## Deploy to Vercel
-
-Vercel deployment will guide you through creating a Supabase account and project.
-
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
-
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
-
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
-
-## Clone and run locally
-
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
-
-2. Create a Next.js app using the Supabase Starter template npx command
-
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
-
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
-
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
-
-3. Use `cd` to change into the app's directory
-
-   ```bash
-   cd with-supabase-app
-   ```
-
-4. Rename `.env.example` to `.env.local` and update the following:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
+```bash
+npm install
+npx supabase start        # first run pulls the images, takes a few minutes
+npx supabase status       # prints the API URL and publishable key
+cp .env.example .env.local
 ```
 
-> [!NOTE]
-> This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-> Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-> See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
+Put the `API URL` and `Publishable key` from `supabase status` into
+`.env.local`, then:
 
-Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+```bash
+npm run dev
+```
 
-5. You can now run the Next.js local development server:
+Open http://localhost:3000. `supabase start` applies the migrations and the
+seed data, so these accounts are ready to use:
 
-   ```bash
-   npm run dev
-   ```
+| Email                  | Password      | Role    |
+| ---------------------- | ------------- | ------- |
+| `student@example.com`  | `password123` | student |
+| `student2@example.com` | `password123` | student |
+| `admin@example.com`    | `password123` | admin   |
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+You can also sign up a new account. New accounts are always students.
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+Other useful commands:
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+```bash
+npx supabase db reset     # rebuild the local database from migrations + seed
+npm run db:test           # run the pgTAP database tests
+npm run db:types          # regenerate lib/database.types.ts from the local schema
+npm run lint
+npm run build
+```
 
-## Feedback and issues
+Supabase Studio runs at http://127.0.0.1:54323 if you want to look at the data.
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+### Making someone an admin
 
-## More Supabase examples
+There is deliberately no way to become an admin from inside the app. Run this
+in the SQL editor (Studio locally, or the dashboard for a hosted project):
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+```sql
+update public.profiles
+set role = 'admin'
+where id = (select id from auth.users where email = 'someone@example.com');
+```
+
+### Using a hosted Supabase project
+
+```bash
+npx supabase login
+npx supabase link --project-ref <your-project-ref>
+npx supabase db push --remote
+```
+
+Then set `.env.local` to the project's URL and publishable key. In the
+dashboard, add `http://localhost:3000/**` (and your deployed URL) under
+Authentication > URL Configuration. The seed is not applied by `db push`, so
+create an admin with the SQL above.
+
+## How it works
+
+### Request flow
+
+Pages are server components. They read data with the Supabase server client,
+which is created per request from the user's cookies. Every change goes
+through a Route Handler under `app/api`, called with `fetch` from client
+components. There are no Server Actions.
+
+The Route Handlers and pages all use the same Supabase client with the
+user's own session (never the service role key), so Postgres row level
+security applies to every query. The proxy (`proxy.ts`, which Next 16 uses in
+place of `middleware.ts`) keeps the session cookie fresh and sends signed-out
+visitors to the login page.
+
+### API
+
+| Method  | Route                       | Who      | What                                     |
+| ------- | --------------------------- | -------- | ---------------------------------------- |
+| `GET`   | `/api/consultations`        | signed in | The caller's own consultations         |
+| `POST`  | `/api/consultations`        | signed in | Book a consultation                     |
+| `PATCH` | `/api/consultations/:id`    | owner    | Reschedule, complete/incomplete, cancel  |
+| `GET`   | `/api/admin/consultations`  | admin    | Every consultation                       |
+
+`PATCH` takes any of `{ "scheduledAt": "<ISO date>" }`,
+`{ "completed": true | false }` or `{ "status": "cancelled" }`.
+
+Request bodies are validated with zod (`lib/validation.ts`). Errors come back
+as `{ "error": "...", "fields": { ... } }` with a matching status code: 400
+for invalid input, 401 when signed out, 403 for non-admins on the admin
+route, 404 when the consultation doesn't exist or isn't yours, and 409 when a
+business rule is broken (for example, editing a cancelled consultation).
+
+### Data model
+
+Migrations are in `supabase/migrations`.
+
+**`profiles`**: one row per user, created by a trigger on `auth.users`.
+
+| Column       | Type                          |
+| ------------ | ----------------------------- |
+| `id`         | uuid, references `auth.users` |
+| `role`       | `app_role` enum: `student`, `admin` (default `student`) |
+| `created_at` | timestamptz                   |
+
+**`consultations`**
+
+| Column         | Type                                               |
+| -------------- | -------------------------------------------------- |
+| `id`           | uuid                                               |
+| `user_id`      | uuid, references `auth.users`                      |
+| `first_name`   | text, 1 to 100 characters                          |
+| `last_name`    | text, 1 to 100 characters                          |
+| `reason`       | text, 1 to 1000 characters                         |
+| `scheduled_at` | timestamptz                                        |
+| `status`       | `consultation_status` enum: `scheduled`, `cancelled` |
+| `completed_at` | timestamptz, null until completed                  |
+| `created_at`, `updated_at` | timestamptz                            |
+
+### Roles and access control
+
+The role lives in `public.profiles.role`, not in the user's auth metadata,
+because users can edit their own `user_metadata`. Users can read their own
+profile but have no insert or update rights on it, so they can't promote
+themselves.
+
+The publishable key ships to the browser, so anyone can call the Supabase
+Data API directly and skip the Next.js API entirely. Because of that, the
+rules are enforced in the database, not only in the Route Handlers:
+
+1. **Row level security** decides which rows a user can touch. Students can
+   read, create and update their own consultations. Admins can read all of
+   them. The admin check is `private.is_admin()`, a `security definer`
+   function in a schema the Data API doesn't expose.
+2. **Column grants** decide which columns can be written. Students can't set
+   `user_id` on update, can't write `created_at`, and nobody can delete a
+   consultation.
+3. **A trigger** (`enforce_consultation_rules`) enforces the business rules:
+   bookings and reschedules must be in the future, cancelled consultations
+   can't be changed, and the database sets `completed_at` itself rather than
+   trusting a timestamp from the client.
+
+The Route Handlers check the same things first so they can return friendly
+errors, but the database is the real boundary. `supabase/tests` has pgTAP
+tests that sign in as different users and check each of these rules.
+
+## Decisions and assumptions
+
+- **API routes over Server Actions.** All mutations go through Route
+  Handlers, as the brief asked. Pages read data directly in server
+  components using the same helpers (`lib/consultations.ts`) instead of
+  calling their own API over HTTP, which would add a network hop for no
+  benefit. The admin GET route is still there for any other client.
+- **Cancelling is a status change, not a delete.** It keeps the history, and
+  admins can still see cancelled bookings. A cancelled consultation can't be
+  reopened; the student books a new one.
+- **Completion is separate from status.** A consultation can be scheduled and
+  incomplete, scheduled and complete, or cancelled. Storing `completed_at`
+  instead of a boolean also records when it happened.
+- **Students can mark a consultation complete before its time.** The brief
+  just asks for a complete/incomplete toggle, so I didn't tie it to the date.
+- **First and last name are stored on each consultation.** The brief lists
+  them as booking fields, so they belong to the booking and could differ
+  from the account holder (for example, booking on someone's behalf).
+- **Times are stored in UTC** (`timestamptz`). The browser converts the
+  `datetime-local` input to UTC before sending it and shows times in the
+  viewer's timezone.
+- **No availability or double-booking rules.** There's no concept of a
+  consultant or time slots in the brief, so any future time is accepted.
+- **Admins are promoted with SQL**, not through the app. That keeps role
+  changes out of reach of any app bug. A real system would want an admin UI
+  for this, guarded by the same checks.
+- **Email confirmation is off** for local development (see
+  `supabase/config.toml`), so sign up logs you straight in. In production I'd
+  turn it on, use a proper SMTP provider and enable leaked password
+  protection.
+
+## Project layout
+
+```
+app/
+  (app)/                 signed-in pages: dashboard, booking form, admin
+  api/                   Route Handlers
+  auth/                  login, sign up, password reset (from the template)
+components/              UI, including consultation-list and booking-form
+lib/
+  auth.ts                current user and admin check
+  consultations.ts       queries and the API response shape
+  validation.ts          zod schemas shared by the API and client
+  api.ts, api-client.ts  server and browser sides of the API
+supabase/
+  migrations/            schema, RLS, grants and trigger
+  seed.sql               demo accounts and consultations
+  tests/                 pgTAP tests
+```
+
+## Development note
+
+I developed against a hosted Supabase project. On my machine the local stack
+starts, but rootless Podman can't run the CLI's container health checks
+(`exec` into the containers fails with a permission error), so commands like
+`supabase status` refuse to work. The migrations are the single source of
+truth for both setups, and CI (`.github/workflows/ci.yml`) runs the full
+local stack on Docker on every push to check the local instructions above:
+it applies the migrations and seed, runs the pgTAP tests, and lints and
+builds the app.
+
+## What I'd do next
+
+- Pagination on the consultation lists, especially the admin one
+- Filtering and search on the admin page
+- An admin screen for managing roles
+- Availability slots so two students can't book the same time
+- Email reminders before a consultation
+- End-to-end tests with Playwright covering the main flows
