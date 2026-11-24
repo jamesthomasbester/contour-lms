@@ -5,7 +5,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(18);
+select plan(22);
 
 -- Fixtures, created as the superuser ---------------------------------------
 
@@ -20,6 +20,10 @@ where id = '33333333-3333-3333-3333-333333333333';
 insert into public.consultations (user_id, first_name, last_name, reason, scheduled_at) values
   ('11111111-1111-1111-1111-111111111111', 'Alice', 'Ng', 'Course plan', now() + interval '1 day'),
   ('22222222-2222-2222-2222-222222222222', 'Ben', 'Lee', 'Feedback', now() + interval '2 days');
+
+-- One of Alice's consultations was already completed in the past.
+insert into public.consultations (user_id, first_name, last_name, reason, scheduled_at, completed_at) values
+  ('11111111-1111-1111-1111-111111111111', 'Alice', 'Ng', 'Done earlier', now() + interval '1 day', '2020-01-01 00:00+00');
 
 select is(
   (select count(*)::int from public.profiles where id in (
@@ -42,7 +46,7 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub": "11111111-1111-1111-1111-111111111111", "role": "authenticated"}', true);
 
 select results_eq(
-  'select first_name from public.consultations',
+  'select distinct first_name from public.consultations',
   $$ values ('Alice') $$,
   'students only see their own consultations'
 );
@@ -87,13 +91,34 @@ select throws_ok(
 );
 
 select lives_ok(
-  $$ update public.consultations set completed_at = '2099-01-01' where user_id = auth.uid() $$,
+  $$ update public.consultations set completed_at = '2099-01-01' where reason = 'Course plan' $$,
   'students can mark their consultation complete'
 );
 
 select ok(
-  (select completed_at <= now() from public.consultations where user_id = auth.uid()),
+  (select completed_at <= now() from public.consultations where reason = 'Course plan'),
   'the completion time is set by the database, not the client'
+);
+
+select lives_ok(
+  $$ update public.consultations set completed_at = now() where reason = 'Done earlier' $$,
+  'marking an already completed consultation complete again is allowed'
+);
+
+select is(
+  (select completed_at from public.consultations where reason = 'Done earlier'),
+  '2020-01-01 00:00+00'::timestamptz,
+  'the original completion time is kept'
+);
+
+select lives_ok(
+  $$ update public.consultations set completed_at = null where reason = 'Done earlier' $$,
+  'students can mark their consultation incomplete'
+);
+
+select ok(
+  (select completed_at is null from public.consultations where reason = 'Done earlier'),
+  'marking incomplete clears the completion time'
 );
 
 select lives_ok(
@@ -126,7 +151,7 @@ select is(
   (select count(*)::int from public.consultations where user_id in (
     '11111111-1111-1111-1111-111111111111',
     '22222222-2222-2222-2222-222222222222')),
-  2,
+  3,
   'admins can see every student''s consultations'
 );
 
@@ -137,7 +162,7 @@ select is_empty(
 
 -- Signed out ----------------------------------------------------------------
 
-reset role;
+select set_config('request.jwt.claims', '', true);
 set local role anon;
 
 select throws_ok(

@@ -1,10 +1,6 @@
--- completed_at was writable directly, so a client could store any timestamp,
--- including one in the future. The trigger now owns the value: a client can
--- only mark a consultation complete (any non-null value) or incomplete
--- (null), and the time recorded is when it was first marked complete.
---
--- Rule violations also get their own SQLSTATE (LM001) so the API can tell
--- them apart from other database errors without matching on messages.
+-- Clients could write any completed_at, even a future one. Now any non-null
+-- value just means "complete" and the trigger records when that happened.
+-- Rule violations also get their own error code, LM001, for the API to map.
 
 create or replace function public.enforce_consultation_rules()
 returns trigger
