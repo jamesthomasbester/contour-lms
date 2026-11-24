@@ -13,6 +13,9 @@ import {
 } from "@/lib/api-client";
 import { fromDateTimeLocalValue, toDateTimeLocalValue } from "@/lib/datetime";
 import { useMounted } from "@/lib/use-mounted";
+import { cn } from "@/lib/utils";
+
+const REASON_MAX_LENGTH = 1000;
 
 export function BookingForm() {
   const router = useRouter();
@@ -20,6 +23,7 @@ export function BookingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [reasonLength, setReasonLength] = useState(0);
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -41,6 +45,7 @@ export function BookingForm() {
       // away and restores it when you come back, so clear the form now or
       // the next visit opens on a disabled "Booking..." button.
       formElement.reset();
+      setReasonLength(0);
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
@@ -67,7 +72,24 @@ export function BookingForm() {
       </div>
 
       <Field label="Reason for consultation" name="reason" errors={fieldErrors}>
-        <Textarea id="reason" name="reason" required maxLength={1000} rows={4} />
+        <Textarea
+          id="reason"
+          name="reason"
+          required
+          maxLength={REASON_MAX_LENGTH}
+          rows={4}
+          aria-describedby="reason-count"
+          onChange={(e) => setReasonLength(e.target.value.length)}
+        />
+        <p
+          id="reason-count"
+          className={cn(
+            "text-right text-xs text-muted-foreground",
+            reasonLength >= REASON_MAX_LENGTH && "text-destructive",
+          )}
+        >
+          {reasonLength} / {REASON_MAX_LENGTH} characters
+        </p>
       </Field>
 
       <Field label="Date and time" name="scheduledAt" errors={fieldErrors}>
