@@ -16,10 +16,11 @@ Built with Next.js 16 (App Router), TypeScript and Supabase (Postgres, Auth,
 - Book a consultation (first name, last name, reason, date and time)
 - Reschedule or cancel your own consultations
 - Admin page at `/admin` listing all consultations (read-only)
+- Password reset by email (from the starter template)
 
 ## Running it locally
 
-You need Node.js 20 or newer and Docker (the Supabase CLI runs the database
+You need Node.js 20.9 or newer (developed on 24) and Docker (the Supabase CLI runs the database
 and auth server in containers). The Supabase CLI itself is a dev dependency,
 so there is nothing else to install.
 
@@ -60,6 +61,11 @@ npm run build
 
 Supabase Studio runs at http://127.0.0.1:54323 if you want to look at the data.
 
+A note on how this was tested: I couldn't run the full local stack on my own
+machine (see the development note at the end), so I built against a hosted
+Supabase project. The same migrations and seed were applied there, and CI
+runs them on a fresh local database on every push.
+
 ### Making someone an admin
 
 There is deliberately no way to become an admin from inside the app. Run this
@@ -89,9 +95,10 @@ create an admin with the SQL above.
 ### Request flow
 
 Pages are server components. They read data with the Supabase server client,
-which is created per request from the user's cookies. Every change goes
-through a Route Handler under `app/api`, called with `fetch` from client
-components. There are no Server Actions.
+which is created per request from the user's cookies. Every change to a
+consultation goes through a Route Handler under `app/api`, called with
+`fetch` from client components. Sign up, log in and log out use supabase-js
+in the browser, as in the starter template. There are no Server Actions.
 
 The Route Handlers and pages all use the same Supabase client with the
 user's own session (never the service role key), so Postgres row level
@@ -101,12 +108,12 @@ visitors to the login page.
 
 ### API
 
-| Method  | Route                       | Who      | What                                     |
-| ------- | --------------------------- | -------- | ---------------------------------------- |
-| `GET`   | `/api/consultations`        | signed in | The caller's own consultations         |
-| `POST`  | `/api/consultations`        | signed in | Book a consultation                     |
-| `PATCH` | `/api/consultations/:id`    | owner    | Reschedule, complete/incomplete, cancel  |
-| `GET`   | `/api/admin/consultations`  | admin    | Every consultation                       |
+| Method  | Route                      | Who       | What                                    |
+| ------- | -------------------------- | --------- | --------------------------------------- |
+| `GET`   | `/api/consultations`       | signed in | The caller's own consultations          |
+| `POST`  | `/api/consultations`       | signed in | Book a consultation                     |
+| `PATCH` | `/api/consultations/:id`   | owner     | Reschedule, complete/incomplete, cancel |
+| `GET`   | `/api/admin/consultations` | admin     | Every consultation                      |
 
 `PATCH` takes any of `{ "scheduledAt": "<ISO date>" }`,
 `{ "completed": true | false }` or `{ "status": "cancelled" }`.
@@ -121,7 +128,9 @@ business rule is broken (for example, editing a cancelled consultation).
 
 Migrations are in `supabase/migrations`.
 
-**`profiles`**: one row per user, created by a trigger on `auth.users`.
+#### `profiles`
+
+One row per user, created by a trigger on `auth.users`.
 
 | Column       | Type                          |
 | ------------ | ----------------------------- |
@@ -129,7 +138,7 @@ Migrations are in `supabase/migrations`.
 | `role`       | `app_role` enum: `student`, `admin` (default `student`) |
 | `created_at` | timestamptz                   |
 
-**`consultations`**
+#### `consultations`
 
 | Column         | Type                                               |
 | -------------- | -------------------------------------------------- |
@@ -154,49 +163,48 @@ The publishable key ships to the browser, so anyone can call the Supabase
 Data API directly and skip the Next.js API entirely. Because of that, the
 rules are enforced in the database, not only in the Route Handlers:
 
-1. **Row level security** decides which rows a user can touch. Students can
+1. Row level security decides which rows a user can touch. Students can
    read, create and update their own consultations. Admins can read all of
    them. The admin check is `private.is_admin()`, a `security definer`
    function in a schema the Data API doesn't expose.
-2. **Column grants** decide which columns can be written. Students can't set
+2. Column grants decide which columns can be written. Students can't set
    `user_id` on update, can't write `created_at`, and nobody can delete a
    consultation.
-3. **A trigger** (`enforce_consultation_rules`) enforces the business rules:
+3. A trigger (`enforce_consultation_rules`) enforces the business rules:
    bookings and reschedules must be in the future, cancelled consultations
    can't be changed, and the database sets `completed_at` itself rather than
    trusting a timestamp from the client.
 
 The Route Handlers check the same things first so they can return friendly
-errors, but the database is the real boundary. `supabase/tests` has pgTAP
+errors, but it's the database that actually enforces them. `supabase/tests` has pgTAP
 tests that sign in as different users and check each of these rules.
 
 ## Decisions and assumptions
 
-- **API routes over Server Actions.** All mutations go through Route
+- API routes over Server Actions. All mutations go through Route
   Handlers, as the brief asked. Pages read data directly in server
   components using the same helpers (`lib/consultations.ts`) instead of
-  calling their own API over HTTP, which would add a network hop for no
-  benefit. The admin GET route is still there for any other client.
-- **Cancelling is a status change, not a delete.** It keeps the history, and
+  calling their own API over HTTP, which would just add a network hop. The admin GET route is still there for any other client.
+- Cancelling is a status change, not a delete. It keeps the history, and
   admins can still see cancelled bookings. A cancelled consultation can't be
   reopened; the student books a new one.
-- **Completion is separate from status.** A consultation can be scheduled and
+- Completion is separate from status. A consultation can be scheduled and
   incomplete, scheduled and complete, or cancelled. Storing `completed_at`
   instead of a boolean also records when it happened.
-- **Students can mark a consultation complete before its time.** The brief
+- Students can mark a consultation complete before its time. The brief
   just asks for a complete/incomplete toggle, so I didn't tie it to the date.
-- **First and last name are stored on each consultation.** The brief lists
+- First and last name are stored on each consultation. The brief lists
   them as booking fields, so they belong to the booking and could differ
   from the account holder (for example, booking on someone's behalf).
-- **Times are stored in UTC** (`timestamptz`). The browser converts the
+- Times are stored in UTC (`timestamptz`). The browser converts the
   `datetime-local` input to UTC before sending it and shows times in the
   viewer's timezone.
-- **No availability or double-booking rules.** There's no concept of a
+- No availability or double-booking rules. There's no concept of a
   consultant or time slots in the brief, so any future time is accepted.
-- **Admins are promoted with SQL**, not through the app. That keeps role
-  changes out of reach of any app bug. A real system would want an admin UI
-  for this, guarded by the same checks.
-- **Email confirmation is off** for local development (see
+- Admins are promoted with SQL, not through the app. That keeps role
+  changes out of reach of any app bug. An admin UI for this would be a
+  sensible next step.
+- Email confirmation is off for local development (see
   `supabase/config.toml`), so sign up logs you straight in. In production I'd
   turn it on, use a proper SMTP provider and enable leaked password
   protection.
@@ -204,38 +212,22 @@ tests that sign in as different users and check each of these rules.
 ## Project layout
 
 ```
-app/
-  (app)/                 signed-in pages: dashboard, booking form, admin
-  api/                   Route Handlers
-  auth/                  login, sign up, password reset (from the template)
-components/              UI, including consultation-list and booking-form
-lib/
-  auth.ts                current user and admin check
-  consultations.ts       queries and the API response shape
-  validation.ts          zod schemas shared by the API and client
-  api.ts, api-client.ts  server and browser sides of the API
-supabase/
-  migrations/            schema, RLS, grants and trigger
-  seed.sql               demo accounts and consultations
-  tests/                 pgTAP tests
+app/(app)/     signed-in pages: dashboard, booking form, admin
+app/api/       Route Handlers
+lib/           auth helpers, queries, zod schemas, API client
+supabase/      migrations, seed.sql and pgTAP tests
 ```
 
 ## Development note
 
-I developed against a hosted Supabase project. On my machine the local stack
-starts, but rootless Podman can't run the CLI's container health checks
-(`exec` into the containers fails with a permission error), so commands like
-`supabase status` refuse to work. The migrations are the single source of
-truth for both setups, and CI (`.github/workflows/ci.yml`) runs the full
-local stack on Docker on every push to check the local instructions above:
-it applies the migrations and seed, runs the pgTAP tests, and lints and
-builds the app.
+On my machine rootless Podman can't run the Supabase CLI's container health
+checks, so most local CLI commands refuse to run. That's why I developed
+against a hosted project. CI (`.github/workflows/ci.yml`) starts a trimmed
+local stack (database, auth and REST) on Docker, applies the migrations and
+seed, runs the pgTAP tests, and lints, typechecks and builds the app.
 
 ## What I'd do next
 
-- Pagination on the consultation lists, especially the admin one
-- Filtering and search on the admin page
-- An admin screen for managing roles
+- Pagination and filtering, especially on the admin list
 - Availability slots so two students can't book the same time
-- Email reminders before a consultation
-- End-to-end tests with Playwright covering the main flows
+- End-to-end tests with Playwright for the main flows
