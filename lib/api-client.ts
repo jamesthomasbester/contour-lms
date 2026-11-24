@@ -3,12 +3,14 @@ import type {
   UpdateConsultationInput,
 } from "@/lib/validation";
 
-type ErrorBody = { error?: string; fields?: Record<string, string[]> };
+export type FieldErrors = Record<string, string[]>;
+
+type ErrorBody = { error?: string; fields?: FieldErrors };
 
 export class ApiError extends Error {
   constructor(
     message: string,
-    public fields: Record<string, string[]> = {},
+    public fields: FieldErrors = {},
   ) {
     super(message);
   }

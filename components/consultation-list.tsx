@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LocalDateTime } from "@/components/local-date-time";
 import { StatusBadge } from "@/components/status-badge";
+import { cn } from "@/lib/utils";
 import { ApiError, updateConsultation } from "@/lib/api-client";
 import type { Consultation } from "@/lib/consultations";
 import { fromDateTimeLocalValue, toDateTimeLocalValue } from "@/lib/datetime";
@@ -42,29 +43,29 @@ export function ConsultationList({
 
 function ConsultationItem({ consultation }: { consultation: Consultation }) {
   const router = useRouter();
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, startSaving] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [newTime, setNewTime] = useState<string | null>(null);
 
   const isCancelled = consultation.status === "cancelled";
 
-  async function save(changes: UpdateConsultationInput) {
-    setIsSaving(true);
+  // The transition stays pending until router.refresh() has brought back
+  // the updated list, so controls don't flicker back to the old value.
+  function save(changes: UpdateConsultationInput) {
     setError(null);
-    try {
-      await updateConsultation(consultation.id, changes);
-      setNewTime(null);
-      // Re-fetch the server-rendered list so it reflects the change.
-      router.refresh();
-    } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? (Object.values(err.fields)[0]?.[0] ?? err.message)
-          : "Could not save the change",
-      );
-    } finally {
-      setIsSaving(false);
-    }
+    startSaving(async () => {
+      try {
+        await updateConsultation(consultation.id, changes);
+        setNewTime(null);
+        router.refresh();
+      } catch (err) {
+        setError(
+          err instanceof ApiError
+            ? (Object.values(err.fields)[0]?.[0] ?? err.message)
+            : "Could not save the change",
+        );
+      }
+    });
   }
 
   function cancel() {
@@ -74,9 +75,7 @@ function ConsultationItem({ consultation }: { consultation: Consultation }) {
   }
 
   return (
-    <li
-      className={`rounded-lg border p-4 ${isCancelled ? "opacity-60" : ""}`}
-    >
+    <li className={cn("rounded-lg border p-4", isCancelled && "opacity-60")}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="font-medium">
@@ -161,7 +160,7 @@ function ConsultationItem({ consultation }: { consultation: Consultation }) {
         </div>
       )}
 
-      {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
     </li>
   );
 }

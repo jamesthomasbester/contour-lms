@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ApiError, createConsultation } from "@/lib/api-client";
+import {
+  ApiError,
+  createConsultation,
+  type FieldErrors,
+} from "@/lib/api-client";
 import { fromDateTimeLocalValue, toDateTimeLocalValue } from "@/lib/datetime";
 import { useMounted } from "@/lib/use-mounted";
-
-type FieldErrors = Record<string, string[]>;
 
 export function BookingForm() {
   const router = useRouter();
@@ -73,7 +75,7 @@ export function BookingForm() {
         />
       </Field>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       <Button type="submit" disabled={isSubmitting} className="self-start">
         {isSubmitting ? "Booking..." : "Book consultation"}
@@ -98,7 +100,7 @@ function Field({
       <Label htmlFor={name}>{label}</Label>
       {children}
       {errors[name]?.map((message) => (
-        <p key={message} className="text-sm text-red-500">
+        <p key={message} className="text-sm text-destructive">
           {message}
         </p>
       ))}
