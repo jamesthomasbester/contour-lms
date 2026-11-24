@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-const name = z.string().trim().min(1, "Required").max(100, "Too long");
+const requiredText = (max: number) =>
+  z
+    .string({ error: "Required" })
+    .trim()
+    .min(1, "Required")
+    .max(max, "Too long");
 
 // The browser sends an ISO string built from the user's local time, e.g.
 // new Date("2026-12-01T09:30").toISOString(), so the server only sees UTC.
@@ -9,9 +14,9 @@ const futureDateTime = z.iso
   .refine((value) => new Date(value) > new Date(), "Must be in the future");
 
 export const createConsultationSchema = z.object({
-  firstName: name,
-  lastName: name,
-  reason: z.string().trim().min(1, "Required").max(1000, "Too long"),
+  firstName: requiredText(100),
+  lastName: requiredText(100),
+  reason: requiredText(1000),
   scheduledAt: futureDateTime,
 });
 
