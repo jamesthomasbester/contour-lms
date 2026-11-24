@@ -24,7 +24,8 @@ https://contour-lms.vercel.app
 
 Demo logins for a student and an admin were sent with my submission. You
 can also sign up a new account, which will be a student. The admin page is
-at `/admin`.
+at `/admin`. It's a demo with made-up data, so please don't enter real
+personal details.
 
 ## Running it locally
 
