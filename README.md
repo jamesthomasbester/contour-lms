@@ -64,6 +64,7 @@ Other useful commands:
 ```bash
 npx supabase db reset     # rebuild the local database from migrations + seed
 npm run db:test           # run the pgTAP database tests
+npm run test:api          # HTTP tests for the API (needs the app running)
 npm run db:types          # regenerate lib/database.types.ts from the local schema
 npm run lint
 npm run build
@@ -123,7 +124,7 @@ visitors to the login page.
 | `GET`   | `/api/consultations`       | signed in | The caller's own consultations          |
 | `POST`  | `/api/consultations`       | signed in | Book a consultation                     |
 | `PATCH` | `/api/consultations/:id`   | owner     | Reschedule, complete/incomplete, cancel |
-| `GET`   | `/api/admin/consultations` | admin     | Every consultation                      |
+| `GET`   | `/api/admin/consultations` | admin     | All consultations, paginated            |
 
 `PATCH` takes any of `{ "scheduledAt": "<ISO date>" }`,
 `{ "completed": true | false }` or `{ "status": "cancelled" }`.
@@ -186,15 +187,20 @@ rules are enforced in the database, not only in the Route Handlers:
    trusting a timestamp from the client.
 
 The Route Handlers check the same things first so they can return friendly
-errors, but it's the database that actually enforces them. `supabase/tests` has pgTAP
-tests that sign in as different users and check each of these rules.
+errors, but it's the database that actually enforces them. `supabase/tests`
+has pgTAP tests that sign in as different users and check each of these
+rules, and `tests/api.test.mjs` checks the same flows over HTTP against the
+running app (401, 403, 404, 409, booking, completing, rescheduling and
+cancelling).
 
 ## Decisions and assumptions
 
 - API routes over Server Actions. All mutations go through Route
   Handlers, as the brief asked. Pages read data directly in server
   components using the same helpers (`lib/consultations.ts`) instead of
-  calling their own API over HTTP, which would just add a network hop. The admin GET route is still there for any other client.
+  calling their own API over HTTP, which would just add a network hop.
+  The admin GET route is still there for any other client, and both it and
+  the admin page are paginated (20 per page).
 - Cancelling is a status change, not a delete. It keeps the history, and
   admins can still see cancelled bookings. A cancelled consultation can't be
   reopened; the student books a new one.
@@ -233,10 +239,13 @@ On my machine rootless Podman can't run the Supabase CLI's container health
 checks, so most local CLI commands refuse to run. That's why I developed
 against a hosted project. CI (`.github/workflows/ci.yml`) starts a trimmed
 local stack (database, auth and REST) on Docker, applies the migrations and
-seed, runs the pgTAP tests, and lints, typechecks and builds the app.
+seed, runs the pgTAP tests, then builds and starts the app and runs the API
+tests against it. A separate job lints, typechecks and builds.
 
 ## What I'd do next
 
-- Pagination and filtering, especially on the admin list
+- Filtering and search on the admin list
+- Show the account that made each booking in the admin view, since the name
+  on a booking can differ from the account holder
 - Availability slots so two students can't book the same time
 - End-to-end tests with Playwright for the main flows
