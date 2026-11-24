@@ -22,10 +22,9 @@ Built with Next.js 16 (App Router), TypeScript and Supabase (Postgres, Auth,
 
 https://contour-lms.vercel.app
 
-Log in as `student@example.com` or `admin@example.com` (password
-`password123`) to try both roles, or sign up a new student account. The
-admin page is at `/admin`. The demo data is shared by everyone using these
-accounts, so it may change.
+Demo logins for a student and an admin were sent with my submission. You
+can also sign up a new account, which will be a student. The admin page is
+at `/admin`.
 
 ## Running it locally
 
@@ -48,7 +47,8 @@ npm run dev
 ```
 
 Open http://localhost:3000. `supabase start` applies the migrations and the
-seed data, so these accounts are ready to use:
+seed data, so these local accounts are ready to use (the live demo uses
+different passwords):
 
 | Email                  | Password      | Role    |
 | ---------------------- | ------------- | ------- |
