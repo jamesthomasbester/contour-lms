@@ -35,3 +35,6 @@ export const consultationIdSchema = z.uuid();
 
 export type CreateConsultationInput = z.infer<typeof createConsultationSchema>;
 export type UpdateConsultationInput = z.infer<typeof updateConsultationSchema>;
+
+// ?page= from the URL. Anything missing or invalid falls back to page 1.
+export const pageSchema = z.coerce.number().int().min(1).catch(1);

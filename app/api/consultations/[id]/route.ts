@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { databaseError, jsonError, readJson, validationError } from "@/lib/api";
-import { toConsultation } from "@/lib/consultations";
+import { CONSULTATION_COLUMNS, toConsultation } from "@/lib/consultations";
 import type { TablesUpdate } from "@/lib/database.types";
 import {
   consultationIdSchema,
@@ -44,7 +44,7 @@ export async function PATCH(request: Request, { params }: Params) {
     .update(changes)
     .eq("id", id)
     .eq("user_id", userId)
-    .select()
+    .select(CONSULTATION_COLUMNS)
     .maybeSingle();
 
   if (error) return databaseError(error);

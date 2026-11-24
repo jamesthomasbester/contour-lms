@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { databaseError, jsonError, readJson, validationError } from "@/lib/api";
-import { listOwnConsultations, toConsultation } from "@/lib/consultations";
+import {
+  CONSULTATION_COLUMNS,
+  listOwnConsultations,
+  toConsultation,
+} from "@/lib/consultations";
 import { createConsultationSchema } from "@/lib/validation";
 
 // GET /api/consultations
@@ -39,7 +43,7 @@ export async function POST(request: Request) {
       reason,
       scheduled_at: scheduledAt,
     })
-    .select()
+    .select(CONSULTATION_COLUMNS)
     .single();
 
   if (error) return databaseError(error);
