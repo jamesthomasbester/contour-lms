@@ -4,8 +4,7 @@ import type { Database, Tables } from "@/lib/database.types";
 type Client = SupabaseClient<Database>;
 type ConsultationRow = Tables<"consultations">;
 
-// Shape sent to the browser. Kept separate from the table row so the API
-// uses camelCase and doesn't leak columns the UI has no use for.
+// What the API and UI work with: camelCase, and only the columns we show.
 export type Consultation = {
   id: string;
   firstName: string;
@@ -30,10 +29,8 @@ export function toConsultation(row: ConsultationRow): Consultation {
   };
 }
 
-// These run with the caller's session, so RLS decides what comes back.
-// The explicit user_id filter in listOwn matters for admins, who can see
-// every row but should only get their own here.
-
+// Both run with the caller's session, so RLS still applies. The user_id
+// filter matters for admins, who would otherwise get everyone's rows.
 export async function listOwnConsultations(supabase: Client, userId: string) {
   const { data, error } = await supabase
     .from("consultations")
