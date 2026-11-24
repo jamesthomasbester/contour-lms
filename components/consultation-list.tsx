@@ -75,7 +75,12 @@ function ConsultationItem({ consultation }: { consultation: Consultation }) {
   }
 
   return (
-    <li className={cn("rounded-lg border p-4", isCancelled && "opacity-60")}>
+    <li
+      className={cn(
+        "rounded-xl border bg-card p-5 shadow-sm",
+        isCancelled && "opacity-60",
+      )}
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="font-medium">
@@ -101,7 +106,12 @@ function ConsultationItem({ consultation }: { consultation: Consultation }) {
                 save({ completed: checked === true })
               }
             />
-            <Label htmlFor={`complete-${consultation.id}`}>Completed</Label>
+            <Label
+              htmlFor={`complete-${consultation.id}`}
+              className="text-sm font-medium normal-case tracking-normal"
+            >
+              Completed
+            </Label>
           </div>
 
           {newTime === null ? (
