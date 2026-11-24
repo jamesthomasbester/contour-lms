@@ -7,6 +7,7 @@ export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
+  let cacheHeaders: Record<string, string> = {};
 
   // If the env vars are not set, skip proxy check. You can remove this
   // once you setup the project.
@@ -24,7 +25,7 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet, headers) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
@@ -33,6 +34,11 @@ export async function updateSession(request: NextRequest) {
           });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options),
+          );
+          // Cache-Control headers that stop a CDN caching the new cookies.
+          cacheHeaders = headers;
+          Object.entries(headers).forEach(([key, value]) =>
+            supabaseResponse.headers.set(key, value),
           );
         },
       },
@@ -53,8 +59,9 @@ export async function updateSession(request: NextRequest) {
   if (user && path === "/") {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
-    // Carry over any refreshed session cookies (see the note below).
-    const redirect = NextResponse.redirect(url);
+    // A refreshed session has to survive the redirect, so copy the cookies
+    // and cache headers across.
+    const redirect = NextResponse.redirect(url, { headers: cacheHeaders });
     supabaseResponse.cookies
       .getAll()
       .forEach((cookie) => redirect.cookies.set(cookie));
