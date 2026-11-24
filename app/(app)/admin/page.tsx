@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { LocalDateTime } from "@/components/local-date-time";
-import { StatusBadge } from "@/components/status-badge";
+import { AdminConsultationRow } from "@/components/admin-consultation-row";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser, isAdmin } from "@/lib/auth";
 import {
@@ -109,10 +108,13 @@ function ConsultationTable({
   return (
     <div className="overflow-x-auto rounded-lg border">
       {/* Fixed column widths so long names or reasons can't stretch the
-          table. Both are shortened here; hover shows the full text. */}
+          table. Each row can be expanded to show them in full. */}
       <table className="w-full min-w-[900px] table-fixed text-left text-sm">
         <thead className="border-b bg-muted/50">
           <tr>
+            <th className="w-10 p-2">
+              <span className="sr-only">Expand</span>
+            </th>
             <th className="w-40 p-3 font-medium">Student</th>
             <th className="p-3 font-medium">Reason</th>
             <th className="w-44 p-3 font-medium">Scheduled for</th>
@@ -122,25 +124,7 @@ function ConsultationTable({
         </thead>
         <tbody>
           {consultations.map((c) => (
-            <tr key={c.id} className="border-b align-top last:border-0">
-              <td className="truncate p-3" title={`${c.firstName} ${c.lastName}`}>
-                {c.firstName} {c.lastName}
-              </td>
-              <td className="p-3">
-                <p className="line-clamp-2 break-words" title={c.reason}>
-                  {c.reason}
-                </p>
-              </td>
-              <td className="p-3 whitespace-nowrap">
-                <LocalDateTime value={c.scheduledAt} />
-              </td>
-              <td className="p-3">
-                <StatusBadge consultation={c} />
-              </td>
-              <td className="p-3 whitespace-nowrap text-muted-foreground">
-                <LocalDateTime value={c.createdAt} />
-              </td>
-            </tr>
+            <AdminConsultationRow key={c.id} consultation={c} />
           ))}
         </tbody>
       </table>
