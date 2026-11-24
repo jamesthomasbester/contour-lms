@@ -23,7 +23,8 @@ export function BookingForm() {
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-    const form = new FormData(e.currentTarget);
+    const formElement = e.currentTarget;
+    const form = new FormData(formElement);
 
     setIsSubmitting(true);
     setError(null);
@@ -36,6 +37,10 @@ export function BookingForm() {
         reason: String(form.get("reason")),
         scheduledAt: fromDateTimeLocalValue(String(form.get("scheduledAt"))),
       });
+      // With cacheComponents, Next keeps this page's state when you navigate
+      // away and restores it when you come back, so clear the form now or
+      // the next visit opens on a disabled "Booking..." button.
+      formElement.reset();
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
@@ -45,6 +50,7 @@ export function BookingForm() {
       } else {
         setError("Could not book the consultation");
       }
+    } finally {
       setIsSubmitting(false);
     }
   }
