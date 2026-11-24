@@ -49,8 +49,8 @@ function ConsultationItem({ consultation }: { consultation: Consultation }) {
 
   const isCancelled = consultation.status === "cancelled";
 
-  // The transition stays pending until router.refresh() has brought back
-  // the updated list, so controls don't flicker back to the old value.
+  // Running the refresh inside a transition keeps the controls disabled
+  // while the new list loads.
   function save(changes: UpdateConsultationInput) {
     setError(null);
     startSaving(async () => {
