@@ -5,13 +5,21 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   app:
     name: Lint, typecheck and build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -20,23 +28,22 @@ jobs:
       - run: npx tsc --noEmit
       - run: npm run build
         env:
-          # Only needed so the build can run; nothing connects to it.
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: placeholder
 
   database:
     name: Migrations, seed and pgTAP tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
       - run: npm ci
-      # Starts the local stack, which applies every migration and the seed
-      # on a fresh database, the same way a reviewer would run it.
-      - run: npx supabase start
+      # A fresh local stack applies every migration and then the seed.
+      - run: >
+          npx supabase start
+          -x studio,imgproxy,edge-runtime,logflare,vector,mailpit,realtime,storage-api,supavisor,postgres-meta
       - run: npx supabase test db
-      - run: npx supabase stop --no-backup
-        if: always()
