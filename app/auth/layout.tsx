@@ -10,7 +10,7 @@ export default function AuthLayout({
       <div className="grid w-full max-w-4xl overflow-hidden rounded-2xl border bg-card shadow-2xl md:grid-cols-2">
         <div className="hidden flex-col justify-center gap-3 bg-primary bg-[radial-gradient(hsl(0_0%_100%/0.15)_1px,transparent_1px)] p-10 text-center text-primary-foreground [background-size:18px_18px] md:flex">
           <h2 className="text-3xl font-extrabold">Welcome to Contour LMS</h2>
-          <p className="text-primary-foreground/85">
+          <p>
             Book a consultation, keep track of what&apos;s coming up and
             reschedule when plans change.
           </p>

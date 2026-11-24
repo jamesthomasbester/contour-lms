@@ -8,7 +8,9 @@ export async function AuthButton() {
 
   return userId ? (
     <div className="flex items-center gap-4">
-      <span className="hidden text-muted-foreground sm:inline">{email}</span>
+      <span className="max-w-40 truncate text-muted-foreground" title={email}>
+        {email}
+      </span>
       <LogoutButton />
     </div>
   ) : (
