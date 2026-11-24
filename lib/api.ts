@@ -19,10 +19,10 @@ export async function readJson(request: Request): Promise<unknown> {
   }
 }
 
-// P0001 is what the consultations trigger raises for broken business rules.
-// The handlers check the same rules first, so this mostly covers races.
+// LM001 is raised by the consultations trigger when a business rule is
+// broken, e.g. editing a cancelled consultation.
 export function databaseError(error: PostgrestError) {
-  if (error.code === "P0001") return jsonError(409, error.message);
+  if (error.code === "LM001") return jsonError(409, error.message);
   if (error.code === "42501") return jsonError(403, "Not allowed");
 
   console.error("Database error", error);

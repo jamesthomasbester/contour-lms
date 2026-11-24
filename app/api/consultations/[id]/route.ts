@@ -27,40 +27,27 @@ export async function PATCH(request: Request, { params }: Params) {
   const parsed = updateConsultationSchema.safeParse(await readJson(request));
   if (!parsed.success) return validationError(parsed.error);
 
-  // Filtering on user_id means admins get a 404 for other students' rows
-  // here too. The admin view is read-only.
-  const { data: existing, error: fetchError } = await supabase
-    .from("consultations")
-    .select("status, completed_at")
-    .eq("id", id)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (fetchError) return databaseError(fetchError);
-  if (!existing) return jsonError(404, "Consultation not found");
-  if (existing.status === "cancelled") {
-    return jsonError(409, "Cancelled consultations cannot be modified");
-  }
-
   const { scheduledAt, completed, status } = parsed.data;
   const changes: TablesUpdate<"consultations"> = {};
 
   if (scheduledAt !== undefined) changes.scheduled_at = scheduledAt;
   if (status !== undefined) changes.status = status;
+  // The trigger decides the stored completion time; we only say yes or no.
   if (completed !== undefined) {
-    // Keep the original completion time if it is already complete.
-    changes.completed_at = completed
-      ? (existing.completed_at ?? new Date().toISOString())
-      : null;
+    changes.completed_at = completed ? new Date().toISOString() : null;
   }
 
+  // Admins can read every row, but can only change their own, so the
+  // user_id filter keeps this endpoint scoped to the caller.
   const { data, error } = await supabase
     .from("consultations")
     .update(changes)
     .eq("id", id)
+    .eq("user_id", userId)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) return databaseError(error);
+  if (!data) return jsonError(404, "Consultation not found");
   return NextResponse.json({ consultation: toConsultation(data) });
 }
