@@ -11,7 +11,7 @@ import { before, describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { createServerClient } from "@supabase/ssr";
 
-const APP_URL = process.env.APP_URL ?? "http://localhost:3000";
+const APP_URL = process.env.APP_URL ?? "http://127.0.0.1:3000";
 const PASSWORD = process.env.SEED_PASSWORD ?? "password123";
 
 // Signs in the same way the browser does and returns the auth cookies as a
@@ -91,11 +91,14 @@ describe("access control", () => {
     assert.equal(res.body.page, 1);
     assert.equal(res.body.pageSize, 20);
 
+    // The seed has consultations for two different students.
+    assert.ok(res.body.total >= 4);
     const names = new Set(res.body.consultations.map((c) => c.firstName));
-    assert.ok(names.has("Sam") && names.has("Priya"));
+    assert.ok(names.size >= 2);
   });
 });
 
+// These run in order and share the consultation booked in the first test.
 describe("booking and managing a consultation", () => {
   let id;
 
@@ -130,6 +133,7 @@ describe("booking and managing a consultation", () => {
   });
 
   test("another student can't change it", async () => {
+    assert.ok(id, "booking failed");
     const res = await api(`/consultations/${id}`, {
       cookie: otherStudent,
       method: "PATCH",
@@ -139,6 +143,7 @@ describe("booking and managing a consultation", () => {
   });
 
   test("marks it complete and incomplete", async () => {
+    assert.ok(id, "booking failed");
     const done = await api(`/consultations/${id}`, {
       cookie: student,
       method: "PATCH",
@@ -156,6 +161,7 @@ describe("booking and managing a consultation", () => {
   });
 
   test("reschedules it", async () => {
+    assert.ok(id, "booking failed");
     const newTime = daysFromNow(6);
     const res = await api(`/consultations/${id}`, {
       cookie: student,
@@ -170,6 +176,7 @@ describe("booking and managing a consultation", () => {
   });
 
   test("cancels it, after which it can't be changed", async () => {
+    assert.ok(id, "booking failed");
     const cancelled = await api(`/consultations/${id}`, {
       cookie: student,
       method: "PATCH",

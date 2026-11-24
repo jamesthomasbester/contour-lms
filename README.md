@@ -64,7 +64,7 @@ Other useful commands:
 ```bash
 npx supabase db reset     # rebuild the local database from migrations + seed
 npm run db:test           # run the pgTAP database tests
-npm run test:api          # HTTP tests for the API (needs the app running)
+npm run test:api          # API tests; needs the app running on the local stack
 npm run db:types          # regenerate lib/database.types.ts from the local schema
 npm run lint
 npm run build
