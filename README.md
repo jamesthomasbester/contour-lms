@@ -18,6 +18,15 @@ Built with Next.js 16 (App Router), TypeScript and Supabase (Postgres, Auth,
 - Admin page at `/admin` listing all consultations (read-only)
 - Password reset by email (from the starter template)
 
+## Live demo
+
+https://contour-lms.vercel.app
+
+Log in as `student@example.com` or `admin@example.com` (password
+`password123`) to try both roles, or sign up a new student account. The
+admin page is at `/admin`. The demo data is shared by everyone using these
+accounts, so it may change.
+
 ## Running it locally
 
 You need Node.js 20.9 or newer (developed on 24) and Docker (the Supabase CLI runs the database
@@ -204,10 +213,9 @@ tests that sign in as different users and check each of these rules.
 - Admins are promoted with SQL, not through the app. That keeps role
   changes out of reach of any app bug. An admin UI for this would be a
   sensible next step.
-- Email confirmation is off for local development (see
-  `supabase/config.toml`), so sign up logs you straight in. In production I'd
-  turn it on, use a proper SMTP provider and enable leaked password
-  protection.
+- Email confirmation is off, both locally (see `supabase/config.toml`) and on
+  the demo project, so sign up logs you straight in. For real users I'd turn
+  it on, use a proper SMTP provider and enable leaked password protection.
 
 ## Project layout
 
