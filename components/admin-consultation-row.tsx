@@ -25,8 +25,8 @@ export function AdminConsultationRow({
           type="button"
           onClick={() => setExpanded(!expanded)}
           aria-expanded={expanded}
-          aria-label={expanded ? "Collapse row" : "Expand row"}
-          className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+          aria-label={`${expanded ? "Collapse" : "Expand"} consultation for ${name}`}
+          className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {expanded ? (
             <ChevronDown className="h-4 w-4" />
@@ -35,7 +35,10 @@ export function AdminConsultationRow({
           )}
         </button>
       </td>
-      <td className={cn("p-3", expanded ? "break-words" : "truncate")} title={name}>
+      <td
+        className={cn("p-3", expanded ? "break-words" : "truncate")}
+        title={expanded ? undefined : name}
+      >
         {name}
       </td>
       <td className="p-3">
